@@ -8,6 +8,20 @@ def main():
     Entry point for the application script
     """
 
+    asciiart="""
+          _ _   _          _      _        
+         (_) | | |        (_)    | |       
+     __ _ _| |_| |__  _ __ _  ___| | _____ 
+    / _` | | __| '_ \| '__| |/ __| |/ / __|
+   | (_| | | |_| |_) | |  | | (__|   <\__ \\
+    \__, |_|\__|_.__/|_|  |_|\___|_|\_\___/
+    __/ |                                 
+   |___/                                  
+    
+    GitHub-inspired calendar heatmap of the 1-year commit history of a git repository.
+    Let's plot some colorful bricks!
+    """
+
     try:  
         os.environ["GITHUB_TOKEN"]
     except KeyError: 
@@ -23,14 +37,14 @@ def main():
         sys.exit(1)
 
     argument_parser = ArgumentParser(
-        description=__doc__,
+        description=asciiart,
         formatter_class=RawDescriptionHelpFormatter)
     argument_parser.add_argument(
-        "-r", "--repo_name",
+        "repo_name",
         type=str,
         help="""GitHub repository in the format <org-or-user-name/repository-name>, e.g. datalad/datalad""")
     argument_parser.add_argument(
-        "-y", "--start_year",
+        "start_year",
         type=int,
         help="""Start year of bricks, e.g. 2019""")
     argument_parser.add_argument(
@@ -38,10 +52,16 @@ def main():
         type=int,
         help="""Start month of bricks (integer), where January=1 and December=12""")
     argument_parser.add_argument(
+        "-c", "--colormap",
+        type=str,
+        help="""Colormap used """)
+    argument_parser.add_argument(
         "-o", "--outputdir",
         type=str,
         help="""Directory to which outputs are written.
         Default is the current working directory.""")
+    # argument_parser.usage = ''
+
     arguments: Namespace = argument_parser.parse_args()
     print(arguments, file=sys.stderr)
     
