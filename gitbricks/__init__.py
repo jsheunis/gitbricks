@@ -44,12 +44,13 @@ def main():
         type=str,
         help="""GitHub repository in the format <org-or-user-name/repository-name>, e.g. datalad/datalad""")
     argument_parser.add_argument(
-        "start_year",
+        "-y", "--start_year",
         type=int,
         help="""Start year of bricks, e.g. 2019""")
     argument_parser.add_argument(
         "-m", "--start_month",
         type=int,
+        default=1,
         help="""Start month of bricks (integer), where January=1 and December=12""")
     argument_parser.add_argument(
         "-c", "--colormap",
@@ -63,6 +64,8 @@ def main():
     # argument_parser.usage = ''
 
     arguments: Namespace = argument_parser.parse_args()
+
+    
     print(arguments, file=sys.stderr)
     
     # Set parameters
