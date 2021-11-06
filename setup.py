@@ -68,7 +68,9 @@ setup(
         'pandas',
         'plotly',
         'PyGithub',
-        'kaleido'
+        'kaleido',
+        'dash',
+        'dash_bootstrap_components'
         ],  # Optional
 
 
