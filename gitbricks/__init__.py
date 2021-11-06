@@ -2,6 +2,7 @@ import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 import os
 from .gitbricks import gitbricks
+from . import app as dash_app
 
 def main():
     """
@@ -39,42 +40,58 @@ def main():
     argument_parser = ArgumentParser(
         description=asciiart,
         formatter_class=RawDescriptionHelpFormatter)
-    argument_parser.add_argument(
+
+    subparsers = argument_parser.add_subparsers(
+        dest='command',
+        title='subcommands',
+        description='',
+        help='Open gitbricks as an interactive dashboard application'
+    )
+    dashboard = subparsers.add_parser('dashboard')
+    plot = subparsers.add_parser('plot')
+    # dashboard.set_defaults(func=app)
+    plot.add_argument(
         "repo_name",
         type=str,
         help="""GitHub repository in the format <org-or-user-name/repository-name>, e.g. datalad/datalad""")
-    argument_parser.add_argument(
+    plot.add_argument(
         "-y", "--start_year",
         type=int,
         help="""Start year of bricks, e.g. 2019""")
-    argument_parser.add_argument(
+    plot.add_argument(
         "-m", "--start_month",
         type=int,
         default=1,
         help="""Start month of bricks (integer), where January=1 and December=12""")
-    argument_parser.add_argument(
+    plot.add_argument(
         "-c", "--colormap",
         type=str,
         help="""Colormap used """)
-    argument_parser.add_argument(
+    plot.add_argument(
         "-o", "--outputdir",
         type=str,
         help="""Directory to which outputs are written.
         Default is the current working directory.""")
-    # argument_parser.usage = ''
+    # plot.usage = ''
+
+    
+
 
     arguments: Namespace = argument_parser.parse_args()
-
-    
     print(arguments, file=sys.stderr)
-    
-    # Set parameters
-    script_path = os.path.realpath(__file__)
-    sep = os.path.sep
-    repo_path = sep.join(script_path.split(sep)[0:-2])
-    package_path = sep.join(script_path.split(sep)[0:-1])
-    # Call main function to generate bricks
-    gitbricks(
-        arguments.repo_name,
-        arguments.start_year,
-        arguments.start_month)
+
+    if arguments.command != 'dashboard':
+        print('running plotter')
+        # Set parameters
+        script_path = os.path.realpath(__file__)
+        sep = os.path.sep
+        repo_path = sep.join(script_path.split(sep)[0:-2])
+        package_path = sep.join(script_path.split(sep)[0:-1])
+        # Call main function to generate bricks
+        gitbricks(
+            arguments.repo_name,
+            arguments.start_year,
+            arguments.start_month)
+    else:
+        print('running dashboard app')
+        dash_app.app.run_server(debug=True)
