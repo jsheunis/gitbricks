@@ -6,9 +6,9 @@ Plot a bunch of colorful bricks!
 
 ![alt text](assets/commit_overview.svg)
 
-GitHub-inspired calendar heatmap of the commit history of a git repository.
+A command line tool and dashboard applicaton to create a calendar heatmap of the commit history of a GitHub repository.
 
-Uses PyGitHub and Plotly.
+Uses PyGitHub, Plotly and Dash.
 
 ## Installation
 
@@ -35,32 +35,43 @@ Set it as an environment variable `GITHUB_TOKEN`:
 export GITHUB_TOKEN="your-personal-access-token"
 ```
 
-### 2. Call `gitbricks` from the command line
+### 2. Call `gitbricks plot` from the command line
 
 Example:
 ```
-gitbricks -r "datalad/datalad" -y 2019 -m 1
+gitbricks plot datalad/datalad -y 2019 -m 1
 ```
 Arguments:
-- `-r / --repo_name` (string): GitHub repository in the format `org-or-user-name/repository-name`, e.g. `datalad/datalad`
-- `-y --start_year` (integer): Start year of bricks, e.g. `2019`
-- `-m --start_month` (integer): Start month of bricks (integer), where January=1 and December=12
+- `repo_name` (string, positional): GitHub repository in the format `org-or-user-name/repository-name`, e.g. `datalad/datalad` or `jsheunis/fMRwhy`
+- `-y --start_year` (integer, optional): Start year of bricks, e.g. `2019`
+- `-m --start_month` (integer, optional): Start month of bricks (integer), where January=1 and December=12
 
-### 3. Outputs
-
-ThE call above saves two files in the working directory:
+The call above saves two files in the working directory:
 
 - `commit_overview.svg` (example above)
 - `commit_overview.html` (interactive figure)
 
+The latter is automatically opened in the browser after you run the command.
+
+### 3. Dash application: `gitbricks dashboard`
+
+Run the following from the command line:
+```
+gitbricks dashboard
+```
+
+This starts a Dash application, which is accessible at http://127.0.0.1:8050/
+in your browser. Here you can enter the repo and year information and generate the
+interactive heatmap *(more functionality = WIP)*.
+
+To exit the application (and stop the webserver) press `CTRL+C` in 
+
 ## TODOS
 
-- Heavy code cleanup / refactoring
-- Fix calendar date padding at the end
-- Add support for leap years
 - Add arguments (outputdir, colormap, styling options, custom dates, user commits, more hover functionality)
-- Create Dash app deployed on Heroku
-- Implement OAuth / GitHub app authentication
+- Extend Dash app
+- Deploy on Heroku
+- (Implement OAuth / GitHub app authentication?)
 
 ## Contributing
 
