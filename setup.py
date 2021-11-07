@@ -12,8 +12,8 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='gitbricks',  # Required
-    version='0.1.0',  # Required
-    description='Generate a calendar heatmap of git repo contributions',  # Optional
+    version='0.1.1',  # Required
+    description='Generate a calendar heatmap of GitHub repo contributions',  # Optional
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional
     url='https://github.com/jsheunis/gitbricks',  # Optional
