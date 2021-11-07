@@ -139,8 +139,6 @@ app.layout = html.Div(
 )
 def on_button_click(n, repo_name, start_year):
     if n is not None:
-        print(repo_name)
-        print(start_year)
         return gitbricks(repo_name, int(start_year), start_month=1, start_day=1, colormap=None, title=None, showfig=False, savefig=False), None
     else:
         raise dash.exceptions.PreventUpdate()

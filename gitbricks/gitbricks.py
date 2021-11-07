@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import calendar
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 from kaleido.scopes.plotly import PlotlyScope
 from . import defaults
@@ -17,27 +18,27 @@ def gitbricks(repo_name, start_year,
     """
 
     # Important dates
-    start_date, end_date, dates_list, first_week, months, weekdays = calculate_dates(start_year, start_month, start_day)
+    start_date, end_date, df_dates, week_count, months, weekdays, months_long, weekdays_long = calculate_dates(start_year, start_month, start_day)
     # Connect to repo via GitHub API
     repo = connect_brick_factory(repo_name)
     # Get all commits from start_date to end_date
     commits = fetch_bricks(repo, start_date, end_date)
     # Sum commits per date
-    df, total = sum_bricks(dates_list, commits)
+    df_dates, total = sum_bricks(df_dates, commits)
     # Prepare data for plotting 
-    date_text_T, arrT_list, month_of_week = process_bricks(first_week, months, df) 
+    comments, commit_counts, month_of_week = process_bricks(df_dates, week_count, months, weekdays_long) 
     # Figure parameters
     if colormap is None:
         colormap = defaults.COLORMAP["githubgreen"]
     if title is None:
         title = f'Commit overview for "{repo.full_name}" from {start_day} {months[start_month]} {start_year} to {start_day} {months[start_month]} {start_year+1} (total={total})'
     gapwidth = defaults.GAPWIDTH
-    x_vals = list(range(weeks_for_year(start_year)))
+    x_vals = list(range(week_count))
     y_vals = weekdays
-    z_vals = arrT_list
-    hovertext = date_text_T
+    z_vals = commit_counts
+    hovertext = comments
     x_tick_text = month_of_week[1::4]
-    x_tick_vals = list(range(1, weeks_for_year(start_year), 4))
+    x_tick_vals = list(range(1, week_count, 4))
     fig = create_bricks_figure(
         x_vals, y_vals, z_vals, gapwidth, colormap,
         hovertext, x_tick_text, x_tick_vals, title)
@@ -66,73 +67,66 @@ def fetch_bricks(repo, start_date, end_date):
     """
     return repo.get_commits(since=start_date, until=end_date)
 
-def sum_bricks(dates_list, commits):
+
+def sum_bricks(dates_frame, commits):
     """
     """
-    # Dataframe to sum commits
-    df = pd.DataFrame(dates_list, columns = ['date'] )
-    df['n_commits'] = [0]*len(df.index)
+    # Add/rewrite commits column in data frame
+    dates_frame['n_commits'] = [0]*len(dates_frame.index)
     # Sum commits per date in date range
     i=0
     for cmt in commits:
         i+=1
         dt = cmt.commit.author.date
         dt = datetime.combine(dt.date(), datetime.min.time())
-        df.loc[df['date']==dt, 'n_commits'] += 1
-    return df, i
+        dates_frame.loc[dates_frame['date']==dt, 'n_commits'] += 1
+    return dates_frame, i
 
 
-def process_bricks(first_week, months, df):
+def process_bricks(df, week_count, months, weekdays_long):
     """
     """
-    week_list = []
-    row = []
-    month_of_week = []
-    date_text_row = []
-    date_text = []
-    extra_days = 0
-    for i in range(365):
-        if i < 7 and first_week[i] == 0:
-            date_text_row.append('')
-            row.append(0)
-            extra_days+=1
-            continue
-        j = i-extra_days
-        if i % 7 == 0:
-            week_list.append(row)
-            txt = str(months[df.iloc[j]['date'].month])
-            month_of_week.append(txt)
-            date_text.append(date_text_row)
-            date_text_row = []
-            row = []
-        
-        n_commits = df.iloc[j]['n_commits']
-        row.append(n_commits)
-        
-        if n_commits == 0:
-            n_txt = 'No commits on '
-        elif n_commits == 1:
-            n_txt = '1 commit on '
-        else:
-            n_txt = f'{n_commits} commits on '
-        
-        dt = df.iloc[j]['date']
-        date_text_row.append(n_txt + dt.strftime('%b %d, %Y'))
+    first_day = df.iloc[0]['dayofweek']
+    # Generate lists for:
+    # commits = 7*week_count
+    # hover_comments = 7*week_count
+    commits = []
+    comments = []
+    for d, day in enumerate(weekdays_long):
+        df_commits = df[df['dayname']==day]['n_commits']
+        commits_list = df_commits.to_numpy().T.tolist()
+        dates_list = list(df_commits.index)
+        idx_count = len(commits_list)
+        if idx_count < week_count:
+            if d < first_day:
+                commits_list = [0] + commits_list
+                dates_list = [''] + dates_list
+            if d > first_day:
+                commits_list = commits_list + [0]
+                dates_list = dates_list + ['']
+        commits.append(commits_list)
+        comments_list = [get_hover_string(cmt, dt) for cmt, dt in zip(commits_list, dates_list)]
+        comments.append(comments_list)
+    # month_of_week = 1*week_count
+    df_months = df[df['dayname']=='Monday']['monthname']
+    months_list = df_months.to_numpy().T.tolist()
+    month_of_week = [m[:3] for m in months_list]
+    return comments, commits, month_of_week
 
-    date_text_T = list(map(list, zip(*date_text)))
-    # TODO: this is a temporary "fix" for 2018 issue where first element in week_list is
-    # an empty list:
-    # /Users/jsheunis/Documents/gitbricks/gitbricks/gitbricks.py:123: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
-    # Fix this correctly!!!!!
-    if not week_list[0]:
-        week_list[0] = [0, 0, 0, 0, 0, 0, 0]
-    print(week_list)
-    print(date_text_T)
-    arr = np.array(week_list)
-    arrT = arr.T
-    arrT_list = arrT.tolist()
+def get_hover_string(n_commits, dt):
+    """
+    """
+    if n_commits == 0:
+        n_txt = 'No commits on '
+    elif n_commits == 1:
+        n_txt = '1 commit on '
+    else:
+        n_txt = f'{n_commits} commits on '
 
-    return date_text_T, arrT_list, month_of_week
+    if dt == '':
+        return ''
+    else:
+        return n_txt + dt.strftime('%b %d, %Y')
 
 def create_bricks_figure(x_vals, y_vals, z_vals, gapwidth, colormap,
 hovertext, x_tick_text, x_tick_vals, title, height=175, width=1000):
@@ -183,14 +177,32 @@ def calculate_dates(start_year, start_month, start_day):
     """
     """
     # Important dates
+    # Get start and end date
     start_date = datetime(start_year, start_month, start_day)
-    end_date = add_years(start_date, 1)
-    dates_list = daterange(start_date, end_date)
-    all_weeks_start_month = calendar.monthcalendar(start_year, start_month)
-    first_week = all_weeks_start_month[0]
+    end_date = start_date + relativedelta(years=1) - relativedelta(days=1)
+    # Get date range
+    dtrange = pd.date_range(start=start_date, end=end_date)
+    dtrange_s = dtrange.to_series()
+    # Get days of week, day names, days of month, month names, add all to dataframe
+    days_of_week = dtrange_s.dt.dayofweek
+    days_of_month = dtrange_s.dt.day
+    day_names = dtrange_s.dt.day_name()
+    month_names = dtrange_s.dt.month_name()
+    df_dates = pd.DataFrame({'date': dtrange_s, 'dayofweek': days_of_week, 'dayname': day_names, 'dayofmonth': days_of_month, 'monthname': month_names})
+    # Get months and weekdays
     months = list(calendar.month_abbr)
     weekdays = list(calendar.day_abbr)
-    return start_date, end_date, dates_list, first_week, months, weekdays
+    months_long = list(calendar.month_name)
+    weekdays_long = list(calendar.day_name)
+    # Get week count
+    week_count = 0
+    for day in weekdays_long:
+        fr = df_dates[df_dates['dayname']==day]
+        temp_count = len(fr.index)
+        if temp_count > week_count:
+            week_count = temp_count
+
+    return start_date, end_date, df_dates, week_count, months, weekdays, months_long, weekdays_long
 
 def save_figure(fig, file_name="commit_overview", file_type="svg"):
     """
