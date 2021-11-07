@@ -3,24 +3,11 @@ from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 import os
 from .gitbricks import gitbricks
 from . import app as dash_app
+from . import defaults
 
 def main():
     """
     Entry point for the application script
-    """
-
-    asciiart="""
-          _ _   _          _      _        
-         (_) | | |        (_)    | |       
-     __ _ _| |_| |__  _ __ _  ___| | _____ 
-    / _` | | __| '_ \| '__| |/ __| |/ / __|
-   | (_| | | |_| |_) | |  | | (__|   <\__ \\
-    \__, |_|\__|_.__/|_|  |_|\___|_|\_\___/
-    __/ |                                 
-   |___/                                  
-    
-    GitHub-inspired calendar heatmap of the 1-year commit history of a git repository.
-    Let's plot some colorful bricks!
     """
 
     try:  
@@ -38,14 +25,14 @@ def main():
         sys.exit(1)
 
     argument_parser = ArgumentParser(
-        description=asciiart,
+        description=defaults.ASCIIART,
         formatter_class=RawDescriptionHelpFormatter)
 
     subparsers = argument_parser.add_subparsers(
         dest='command',
         title='subcommands',
-        description='',
-        help='Open gitbricks as an interactive dashboard application'
+        description='insert description here',
+        help='Open gitbricks as an interactive browser application (dashboard), or generate a plot from the command line (plot)'
     )
     dashboard = subparsers.add_parser('dashboard')
     plot = subparsers.add_parser('plot')

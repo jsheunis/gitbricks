@@ -11,6 +11,7 @@ import numpy as np
 import dash
 import dash_bootstrap_components as dbc
 from gitbricks import gitbricks
+from . import defaults
 
 ##################
 # INITIALIZE APP #
@@ -42,22 +43,6 @@ app.config.suppress_callback_exceptions = True
 ##############
 # APP LAYOUT #
 ##############
-
-asciiart="""
-          _ _   _          _      _        
-         (_) | | |        (_)    | |       
-     __ _ _| |_| |__  _ __ _  ___| | _____ 
-    / _` | | __| '_ \| '__| |/ __| |/ / __|
-   | (_| | | |_| |_) | |  | | (__|   <\__ \\
-    \__, |_|\__|_.__/|_|  |_|\___|_|\_\___/
-    __/ |                                 
-   |___/  Let's plot some colorful bricks!
-    
-    A GitHub-inspired calendar heatmap of the 1-year commit history of a git repository.
-    """
-
-
-
 
 fig = go.Figure(
     layout=go.Layout(
@@ -109,7 +94,7 @@ form = dbc.Form(
 
 app.layout = html.Div(
     children=[
-        html.Pre(asciiart,
+        html.Pre(defaults.ASCIIART,
             style={
                 'fontWeight': 'bold',
                 'fontSize': '16px',
